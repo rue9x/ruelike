@@ -184,7 +184,7 @@ function init_levels()
  			{13,0,0,0,0,0,0,0,0,0,0,0,0,0,13},
 				{13,13,13,13,13,13,13,13,13,13,13,13,13,13,13}			
 			}
-   level_map = level_map
+   level_map = get_random_level()
 			level_actors = {
 			 {sprite=38,x=3,y=5,atype="gold",value=10}
 			}
@@ -240,9 +240,92 @@ end
 
 
 function rnd_between(minv,maxv)
-  return flr(rnd(maxv)+minv)
+  return flr(rnd(maxv)) + minv
 end
 
+function tile_at(tx,ty,level_array)
+  -- like mget, but for arrays
+  if (level_array[ty]) then
+    if (level_array[ty][tx]) then
+      return level_array[ty][tx]
+    end   
+  end
+  return false
+end
+
+function get_random_level()
+   finished_map = get_blank_level()
+   num_rooms = 4
+   min_width = 2
+   max_width = 2
+   min_height = 2
+   max_height = 5
+   
+   for each_room=1,num_rooms do
+     checker = true
+     i=0
+     repeat
+       i=i+1
+       digw = rnd_between(min_width,max_width)
+       digh = rnd_between(min_height,max_height)
+       digx = rnd_between(1,room_max_x)
+       --digx2 = rnd_between(1,digx+digw)
+       digx2 = digx+digw
+       digy = rnd_between(1,room_max_x)
+       digy2 = digy+digh
+       --digy2 = rnd_between(1,digy+digh)        
+       checker1 =	check_square_at_for(digx,digy,digx2,digy2,46,finished_map)						
+       checker2 =	check_square_at_for(digx,digy,digx2,digy2,47,finished_map)						
+       checker3 =	check_square_at_for(digx,digy,digx2,digy2,62,finished_map)						
+       checker4 =	check_square_at_for(digx,digy,digx2,digy2,63,finished_map)						
+       if (checker1 == false and checker2 == false and checker3 == false and checker4== false) checker = false 
+     until (checker == false)
+       finished_map = dig_room_at(digx,digy,digx2,digy2,get_num_floor(each_room),finished_map)       
+   end 
+   return finished_map   
+end
+
+function dig_room_at(x,y,x2,y2,tile,diglevel_array)
+  -- will dig out a room in the level array
+  -- at the position of your choosing with
+  -- the tile you choose. will return false
+  -- if out of bounds.
+  if (diglevel_array[y] and diglevel_array[1][x] and diglevel_array[y2] and diglevel_array[y2][x2]) then
+    for each_y=y,y2 do
+      for each_x=x,x2 do
+       
+        diglevel_array[each_y][each_x] = tile                    
+      end
+    end 
+  else
+    return "oob"
+  end  
+  return diglevel_array
+end
+
+function check_square_at_for(x,y,x2,y2,tile,checklevel_array)
+  -- like dig, but checks the square for a specific tile.
+  -- watch out though, because it'll return false
+  -- if it's out of the array too.
+  if (x2 > room_max_x) return "oob"
+  if (y2 > room_max_y) return "oob"
+  if (checklevel_array[y] and checklevel_array[1][x] and checklevel_array[y2] and checklevel_array[y2][x2]) then
+    for each_y=y,y2 do
+      for each_x=x,x2 do
+        if (checklevel_array[each_y][each_x] == tile) return true
+      end
+    end 
+  else
+    return "oob"
+  end 
+  return false
+end
+
+function get_num_floor(n)
+ftiles = {46,47,62,63}
+if (n>#ftiles) return ftiles[1]
+return ftiles[n]
+end
 
 -->8
 -- draws
