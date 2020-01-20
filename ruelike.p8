@@ -184,7 +184,7 @@ function init_levels()
  			{13,0,0,0,0,0,0,0,0,0,0,0,0,0,13},
 				{13,13,13,13,13,13,13,13,13,13,13,13,13,13,13}			
 			}
-   level_map = mapgen()
+   level_map = level_map
 			level_actors = {
 			 {sprite=38,x=3,y=5,atype="gold",value=10}
 			}
@@ -243,99 +243,6 @@ function rnd_between(minv,maxv)
   return flr(rnd(maxv)+minv)
 end
 
-function mapgen()
-  num_rooms = 4
-  
-  new_level = get_blank_level()
-  for i=1,num_rooms do
-    new_level = genrooms(new_level,i)
-  end 
-return new_level
-end
-
-function genrooms(gwhatlevel,numrooms)
-  local room=rndrooms(4,4)
-  clevel = gwhatlevel
-  clevel = place_room(room,clevel,numrooms) 
-  return clevel
-end
-
-function rndrooms(width,height)
-  smallest_width = 2
-  smallest_height = 2
-  local _w=smallest_width+flr(rnd(width)+1)
-  local _h=smallest_height+flr(rnd(height)+1)
-  
-  -- test
-  --local _w = 2
-  --local _h = 2
-  return 
-  {
-   x=0,
-   y=0,
-   w=_w,
-   h=_h
-  }
-end
-
-function place_room(room,pwhatlevel,tile)
-	 local _x
-	 local _y	 
-  cand = {}
-  repeat
-    -- keep trying for a random spot
-	  	_x = max(flr(rnd(room_max_x-3)),1)	  	
-	   _y = max(flr(rnd(room_max_y-2)),1)
-	   print (_x.."x".._y.." p"..room.w.."x"..room.h)  
-	 until does_room_fit(room,_x,_y,pwhatlevel) == true
-	 room.x = _x
-  room.y = _y
-  for _y=1,room.h do
-		    for _x=1,room.w do
-		      -- if this is going over, you're iterating wrong.     
-        pwhatlevel[_y+room.y][_x+room.x] = get_ground_tile(tile)
-		    end
-		end
-  newlevel = pwhatlevel
-  
-  return newlevel
-end
-
-function does_room_fit(room,x,y,room_level)
- 
- 
-  for _y=1,room.h do
-		    for _x=1,room.w do
-        if is_walkable(_x+x,_y+y,room_level) then      
-          return false
-        end
-      
-      end
-		end
-	
-  return true
-end
-
-function is_walkable(tx,ty,room_level)
-	 if room_level[y] and room_level[y][x] then  
-		  local tile=room_level[y][x]
-		  local walkable = fget(tile,0)
-		  if (walkable == false) return false
-		  -- check to see if unwalkable tile
-		  if (tx == 0) return false
-		  if (ty == 0) return false
-		  if (tx > room_max_x) return false
-		  if (ty > room_max_y) return false
-		  return true
-  end
-end
-
-function get_ground_tile(num)
---ground_tiles = {14,15,30,31}
-ground_tiles = {46,47,62,63}
-
-return ground_tiles[num]
-end
 
 -->8
 -- draws
@@ -592,7 +499,7 @@ __gfx__
 00000000000000000000000000000000000000000000000000040000040400400004400000000000000000000000000000000000000000000090090000000900
 00000000000000000000000000000000000000000000000000040000004000000004000000000000000000000000000000000000000000000009900000000000
 __gff__
-010000000000050505000000010f000000000000000005050005050000000000000000000000020202020200020004040000000000000200020000000000040400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+000000000000050505000000010f000000000000000005050005050000000000000000000000020202020200020004040000000000000200020000000000040400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 __sfx__
 000100000000000000000000000000000000000a75008750067500675006750067500575005750047500375003750037500000000000000000000000000000000000000000000000000000000000000000000000
