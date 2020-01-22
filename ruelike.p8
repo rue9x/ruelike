@@ -178,26 +178,6 @@ end
 -->8
 -- level building
 -- 10x8
-function init_levels()
-			level_map = { -- big square.
-				{13,13,13,13,13,13,13,13,13,13,13,13,13,13,13},
- 			{13,0,0,0,0,0,0,0,0,0,0,0,0,0,13},
-				{13,0,0,0,0,0,0,0,0,0,0,0,0,0,13},
- 			{13,0,0,0,0,0,0,0,0,0,0,0,0,0,13},
- 			{13,0,0,0,0,0,0,0,0,0,0,0,0,0,13},
- 			{13,0,0,0,0,0,0,0,0,0,0,0,0,0,13},
- 			{13,0,0,0,0,0,0,0,0,0,0,0,0,0,13},
- 			{13,0,0,0,0,0,0,0,0,0,0,0,0,0,13},
- 			{13,0,0,0,0,0,0,0,0,0,0,0,0,0,13},
- 			{13,0,0,0,0,0,0,0,0,0,0,0,0,0,13},
-				{13,13,13,13,13,13,13,13,13,13,13,13,13,13,13}			
-			}
-   level_map = get_random_level()
-			level_actors = {
-			 {sprite=38,x=3,y=5,atype="gold",value=10}
-			}
-			build_level(level_map)
-end
 
 function build_level(map_data)
   -- draws whatever map you provide it with
@@ -297,8 +277,7 @@ function get_random_level(size)
 									digx2 = digx+digw
        end
        
-       if (digx2+1 >= room_max_x) then 
-         
+       if (digx2+1 >= room_max_x) then          
          diff = (digx2+1)-room_max_y
          digx=digx-diff
          digx2=digx2-diff
@@ -318,7 +297,7 @@ function get_random_level(size)
 		     end
      until (checker == false or dontbuildthisroom == true)
        if (dontbuildthisroom == false and checker==false) then
-         finished_map = dig_room_at(digx,digy,digx2,digy2,get_num_floor(each_room),finished_map)       
+         finished_map = dig_room_at(digx,digy,digx2,digy2,14,finished_map)       
        end
    end 
    return finished_map   
@@ -386,11 +365,123 @@ function check_square_at_for(x,y,x2,y2,tile,checklevel_array)
   return false
 end
 
+function generate_stairs(lv,dist)
+  if (dist == nil) then 
+    stair_distance = 5
+  else
+    stair_distance = dist
+  end
+  repeat
+    _posx = rnd_between(1,#lv[1])
+    _posy = rnd_between(1,#lv)
+  until lv[_posy][_posx] != 0 and lv[_posy][_posx] != 13 and lv[_posy][_posx] != 28 and lv[_posy][_posx] != 29
+  firstx=_posx
+  firsty=_posy
+  i=0
+  repeat
+  i=i+1
+    _posx = rnd_between(1,#lv[1])
+    _posy = rnd_between(1,#lv)
+  if (i == 1000) then
+    return generate_stairs(lv,2)
+  end
+  until abs(_posx-firstx) >= stair_distance and abs(_posy-firsty) >= stair_distance and lv[_posy][_posx] != 0 and lv[_posy][_posx] != 13 and lv[_posy][_posx] != 28 and lv[_posy][_posx] != 29
+  lv[firsty][firstx] = 28 -- dstairs
+  lv[_posy][_posx] = 29 -- ustairs
+  return lv
+end
+
 function get_num_floor(n)
   ftiles = {45,46,47,61,62,63}
-  
   if (n>#ftiles) return ftiles[1]
     return ftiles[n]
+end
+
+function place_player_at_stairs(upordown,lv)
+  if (upordown == "up") tile = 29
+  if (upordown == "down") tile = 28
+  moved = false
+  i = 1
+  repeat
+  i = i + 1
+  for each_y=1,#lv do    
+    for each_x=1,#lv[each_y] do
+      if (lv[each_y][each_x] == tile) then
+        player_x = each_x
+        player_y = each_y
+        moved = true
+      end
+    end  
+  end
+  if (i == 1000) then
+  cls()
+  print ("couldn't place player")
+  stop()
+  end
+  until moved == true
+  return lv
+end
+
+function pave_way_to_exit(lv)
+  -- find downstairs, upstairs.
+  _downstairs = {}
+  _upstairs = {}
+  _downstairs = {
+  x = 0,
+  y = 0
+  }
+  _upstairs = {
+  x = 0,
+  y = 0
+  }
+  
+  
+  for each_y=1,#lv do    
+    for each_x=1,#lv[each_y] do
+      if (lv[each_y][each_x] == 28) then
+        _downstairs.x = each_x
+        _downstairs.y = each_y
+      end
+      if (lv[each_y][each_x] == 29) then
+        _upstairs.x = each_x
+        _upstairs.y = each_y
+      end 
+    end
+  end
+ _x=0
+ _y=0
+ tick=1
+ if (_downstairs.y > _upstairs.y) tick = tick * -1 
+ for each_y=_downstairs.y,_upstairs.y,tick do
+   _y=each_y
+   -- draw the path
+   if (lv[each_y][_downstairs.x] != 28 and lv[each_y][_downstairs.x] != 29) then
+     lv[each_y][_downstairs.x] = 14 
+     if (lv[each_y][_downstairs.x-1] == 0) then
+       lv[each_y][_downstairs.x-1] = 13
+     end
+     if (lv[each_y][_downstairs.x+1] == 0) then
+       lv[each_y][_downstairs.x+1] = 13
+     end
+   end
+    
+ end
+ 
+ tick=1
+ if (_downstairs.x > _upstairs.x) tick = tick * -1 
+ for each_x=_downstairs.x,_upstairs.x,tick do
+   _x=each_y
+   if (lv[_y][each_x] != 28 and lv[_y][each_x] != 29) then
+     lv[_y][each_x] = 14 
+     if (lv[_y-1][each_x] == 0) then
+       lv[_y-1][each_x] = 13
+     end
+     if (lv[_y+1][each_x] == 0) then
+       lv[_y+1][each_x] = 13
+     end
+   end
+ end 
+ return lv
 end
 
 -->8
@@ -522,15 +613,14 @@ function update_check_buttons()
 					  move_player("down",1)		
 	    elseif (btn(❎)) then
 	      current_level = get_random_level()
-	     
+       current_level = generate_stairs(current_level)	     
+	      place_player_at_stairs("down")
+			
 	    end
 	    
 	 end
 end
 
-function update_camera()
-   camera(camera_x,camera_y)
-end
 
 -->8
 -- inits
@@ -609,6 +699,21 @@ function init_debug()
 	 debug_y = 100
 end
 
+function init_levels()
+   level_map = get_random_level()
+   level_map = generate_stairs(level_map)
+			level_map = pave_way_to_exit(level_map)
+			place_player_at_stairs("down",level_map)
+
+			current_level = level_map
+			
+			level_actors = {
+			 --{sprite=38,x=3,y=5,atype="gold",value=10}
+			}
+			build_level(level_map)
+			
+end
+
 function init_first_level()
 -- game inits
 	 init_levels()
@@ -616,15 +721,16 @@ function init_first_level()
   place_actors(level_actors)
 end
 
+
 __gfx__
-00000000000000000000000000000000000000000000000033333333000000007777777700000000000000000000000000000000655055600000000000000000
-0000000000000000000000000000000000000000000000003bbbbbb3005555007ccc7cc70000000000000000000000000ddddddd000000000000000000000300
-0070070000000000000000000000000000000000000000003bbbbbb3056565507cc7ccc70000000000000000000000000ddddddd605605600000000000000300
-0007700000000000000000000000000000000000000000003bbbbbb3055656507c7ccc770000000000000000000000000ddddddd000000000004000003000000
-0007700000000000000000000000000000000000000000003bbbbbb30555655077ccc7c70000000000000000000000000ddddddd560560600000000003000000
-0070070000000000000000000000000000000000000000003bbbbbb3055656507ccc7cc70000000000000000000000000ddddddd000000000000000000000300
-0000000000000000000000000000000000000000000000003bbbbbb3005565007cc7ccc70000000000000000000000000ddddddd556055600000000000000300
-0000000000000000000000000000000000000000000000003333333300000000777777770000000000000000000000000ddddddd000000000000000000000000
+00000000000000000000000000000000000000000000000033333333000000007777777700000000000000005555555500000000655055600000000000000000
+0000000000000000000000000000000000000000000000003bbbbbb3005555007ccc7cc700000000000aaa00544444450ddddddd000000000000000000000300
+0070070000000000000000000000000000000000000000003bbbbbb3056565507cc7ccc700000000000a0a00544444450ddddddd605605600000000000000300
+0007700000000000000000000000000000000000000000003bbbbbb3055656507c7ccc7700000000000aaa00544444450ddddddd000000000004000003000000
+0007700000000000000000000000000000000000000000003bbbbbb30555655077ccc7c7000000000000a000544444450ddddddd560560600000000003000000
+0070070000000000000000000000000000000000000000003bbbbbb3055656507ccc7cc7000000000000aa0054444a450ddddddd000000000000000000000300
+0000000000000000000000000000000000000000000000003bbbbbb3005565007cc7ccc7000000000000a000544444450ddddddd556055600000000000000300
+000000000000000000000000000000000000000000000000333333330000000077777777000000000000aa00544444450ddddddd000000000000000000000000
 00000000000000000000000000000000000000000088880000000000000000000066600000444000004440000000000055566660500000000000000000000000
 000aa000000aa000000aa000000aa000000000000800008000000000003550000061640004000400040004000000000050000000506500000000000000000000
 00aaa00000aaa00000aaa00000aaa000000000000800008000bbbb00005850006067600604000400040004000000000050500000506506500000000000000000
