@@ -457,6 +457,7 @@ function pave_way_to_exit(lv)
    -- draw the path
    if (lv[each_y][_downstairs.x] != 28 and lv[each_y][_downstairs.x] != 29) then
      lv[each_y][_downstairs.x] = 14 
+    
      if (lv[each_y][_downstairs.x-1] == 0) then
        lv[each_y][_downstairs.x-1] = 13
      end
@@ -482,6 +483,30 @@ function pave_way_to_exit(lv)
    end
  end 
  return lv
+end
+
+function fix_stuck_rooms(lv)
+  _w = 13
+  _f = 14
+  walltearx = {}
+  wallteary = {}
+  for each_y=1,#lv do    
+    for each_x=1,#lv[1] do
+      if (lv[each_y][each_x] == _w) then
+        if (isin(walltearx,each_x)==false and lv[each_y][each_x-1] == _f and lv[each_y][each_x+1] == _f) then
+          lv[each_y][each_x] = _f
+          add(walltearx,each_x)
+        end
+        
+        if (isin(wallteary,each_y)==false and lv[each_y-1] and lv[each_y+1] and lv[each_y-1][each_x] == _f and lv[each_y+1][each_x] == _f) then
+          lv[each_y][each_x] = _f
+          add(wallteary,each_y)
+        end
+       
+      end
+    end    
+  end
+  return lv
 end
 
 -->8
@@ -703,6 +728,7 @@ function init_levels()
    level_map = get_random_level()
    level_map = generate_stairs(level_map)
 			level_map = pave_way_to_exit(level_map)
+   level_map = fix_stuck_rooms(level_map)
 			place_player_at_stairs("down",level_map)
 
 			current_level = level_map
